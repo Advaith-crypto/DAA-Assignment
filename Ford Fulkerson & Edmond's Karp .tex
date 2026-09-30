@@ -1,0 +1,684 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{float}
+
+\geometry{margin=1in}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+
+\begin{document}
+
+%=========================================================
+% TITLE PAGE
+%=========================================================
+
+\begin{titlepage}
+\centering
+
+```
+\vspace*{5cm}
+
+{\Huge\bfseries Ford--Fulkerson and Edmonds--Karp Algorithms\par}
+
+\vspace{1.5cm}
+
+{\Large\bfseries Design and Analysis of Algorithms (DAA)\par}
+
+\vspace{1cm}
+
+{\large\bfseries Name: Advaith Babu K\par}
+
+\vspace{0.4cm}
+
+{\large\bfseries Register Number: 24100943\par}
+
+\vfill
+```
+
+\end{titlepage}
+
+%=========================================================
+% CONTENT
+%=========================================================
+
+\section{Introduction}
+
+Many real-world problems can be represented using a network of connected
+points. Examples include transportation networks, computer networks,
+water pipelines, communication systems, and traffic networks.
+
+In such problems, we may want to find the maximum amount of flow that
+can be sent from a starting point to a destination point. The starting
+point is called the source and the destination point is called the sink.
+
+The Maximum Flow problem is one of the important problems in graph
+algorithms. Two well-known algorithms used to solve this problem are:
+
+\begin{enumerate}
+\item Ford--Fulkerson Algorithm
+\item Edmonds--Karp Algorithm
+\end{enumerate}
+
+Both algorithms repeatedly find an augmenting path and increase the
+flow until no more possible paths are available.
+
+\section{Flow Network}
+
+A flow network is a directed graph in which every edge has a capacity.
+
+A flow network can be represented as:
+
+[
+G=(V,E)
+]
+
+where:
+
+\begin{itemize}
+\item $V$ is the set of vertices.
+\item $E$ is the set of directed edges.
+\item $s$ is the source vertex.
+\item $t$ is the sink vertex.
+\item $c(u,v)$ is the capacity of edge $(u,v)$.
+\item $f(u,v)$ is the current flow through edge $(u,v)$.
+\end{itemize}
+
+The flow must satisfy two important conditions.
+
+\subsection{Capacity Constraint}
+
+For every edge $(u,v)$,
+
+[
+0 \leq f(u,v) \leq c(u,v)
+]
+
+This means that the flow through an edge cannot be greater than its
+capacity.
+
+\subsection{Flow Conservation}
+
+For every vertex other than the source and sink, the amount of incoming
+flow must be equal to the amount of outgoing flow.
+
+[
+\sum\_{u} f(u,v)=\sum\_{w} f(v,w)
+]
+
+Therefore, flow cannot be created or destroyed at an intermediate
+vertex.
+
+\section{Residual Graph}
+
+The residual graph is an important concept used by the
+Ford--Fulkerson algorithm.
+
+For every edge $(u,v)$, the residual capacity is:
+
+[
+c_f(u,v)=c(u,v)-f(u,v)
+]
+
+The residual graph also contains reverse edges. These reverse edges
+allow the algorithm to cancel some previously assigned flow if a
+better path is found later.
+
+For example, if an edge has capacity $10$ and currently carries flow
+$6$, then its remaining forward capacity is:
+
+[
+10-6=4
+]
+
+The corresponding reverse edge can have residual capacity $6$.
+
+This allows the algorithm to send flow backwards and modify an earlier
+decision.
+
+\section{Augmenting Path}
+
+An augmenting path is a path from the source $s$ to the sink $t$ in the
+residual graph.
+
+If an augmenting path exists, additional flow can be sent through that
+path.
+
+The amount of additional flow that can be sent is called the
+bottleneck capacity.
+
+It is given by:
+
+[
+\Delta =
+\min\_{(u,v)\in P} c_f(u,v)
+]
+
+where $P$ is the augmenting path.
+
+After finding the bottleneck, the flow along every edge of the path is
+increased by $\Delta$.
+
+\section{Ford--Fulkerson Algorithm}
+
+The Ford--Fulkerson algorithm is a method for finding the maximum flow
+in a flow network.
+
+The main idea is simple:
+
+\begin{enumerate}
+\item Start with zero flow.
+\item Find any augmenting path from the source to the sink.
+\item Find the minimum residual capacity on that path.
+\item Increase the flow along the path by that amount.
+\item Update the residual graph.
+\item Repeat until there is no augmenting path.
+\end{enumerate}
+
+When no augmenting path exists, the current flow is a maximum flow.
+
+\subsection{Ford--Fulkerson Algorithm Steps}
+
+\begin{enumerate}[label=\textbf{Step \arabic\*:}]
+
+```
+\item Initialize the flow on every edge to zero.
+
+\item Construct the residual graph using the capacities of the
+edges.
+
+\item Find any path from the source $s$ to the sink $t$ in the
+residual graph.
+
+\item Find the minimum residual capacity on this path:
+
+\[
+\Delta =
+\min_{(u,v)\in P} c_f(u,v)
+\]
+
+\item Increase the flow along the path by $\Delta$.
+
+\item Update the residual capacities, including the reverse edges.
+
+\item Repeat the process until there is no path from $s$ to $t$ in
+the residual graph.
+
+\item The resulting flow is the maximum flow.
+```
+
+\end{enumerate}
+
+\section{Example of Ford--Fulkerson}
+
+Consider the following flow network.
+
+\begin{center}
+
+\begin{tikzpicture}[
+scale=1.2,
+every node/.style={
+circle,
+draw,
+minimum size=9mm
+},
+\>=stealth
+]
+
+\node (s) at (0,0) {$s$};
+\node (a) at (2,1.5) {$A$};
+\node (b) at (2,-1.5) {$B$};
+\node (t) at (4,0) {$t$};
+
+\draw[->] (s) -- node[above left] {$10$} (a);
+\draw[->] (s) -- node[below left] {$10$} (b);
+\draw[->] (a) -- node[above right] {$4$} (t);
+\draw[->] (b) -- node[below right] {$6$} (t);
+\draw[->] (a) -- node[right] {$8$} (b);
+
+\end{tikzpicture}
+
+\end{center}
+
+Suppose the first augmenting path selected is:
+
+[
+s\rightarrow A\rightarrow t
+]
+
+The capacities on this path are:
+
+[
+10,\quad 4
+]
+
+Therefore, the bottleneck capacity is:
+
+[
+\Delta=\min(10,4)=4
+]
+
+The flow of $4$ units is sent through this path.
+
+Next, suppose the algorithm selects:
+
+[
+s\rightarrow B\rightarrow t
+]
+
+The capacities available on this path are:
+
+[
+10,\quad 6
+]
+
+Therefore:
+
+[
+\Delta=\min(10,6)=6
+]
+
+The flow is increased by $6$ units.
+
+The total flow is now:
+
+[
+4+6=10
+]
+
+The algorithm continues searching for augmenting paths until none are
+available.
+
+\section{Time Complexity of Ford--Fulkerson}
+
+The running time of Ford--Fulkerson depends on how augmenting paths are
+selected and on the capacities of the edges.
+
+If all edge capacities are integers, every augmentation increases the
+flow by at least one unit.
+
+Let:
+
+[
+F=\text{value of the maximum flow}
+]
+
+Then there can be at most $F$ augmentations.
+
+Finding an augmenting path using DFS or BFS takes:
+
+[
+O(E)
+]
+
+time.
+
+Therefore, the total time complexity is:
+
+[
+\boxed{O(EF)}
+]
+
+for integer capacities.
+
+\subsection{Important Point}
+
+The complexity $O(EF)$ depends on the value of the maximum flow.
+Therefore, Ford--Fulkerson is not considered a polynomial-time
+algorithm when the capacities are represented in binary.
+
+Also, with irrational capacities, Ford--Fulkerson can fail to terminate
+for some choices of augmenting paths.
+
+\section{Edmonds--Karp Algorithm}
+
+Edmonds--Karp is a specific implementation of the
+Ford--Fulkerson method.
+
+The main difference is the way an augmenting path is selected.
+
+Ford--Fulkerson can use any augmenting path.
+
+Edmonds--Karp always selects the augmenting path with the smallest
+number of edges. This path is found using Breadth-First Search (BFS).
+
+Therefore:
+
+[
+\boxed{\text{Edmonds--Karp = Ford--Fulkerson + BFS}}
+]
+
+\section{Why BFS is Used}
+
+BFS explores a graph level by level.
+
+Therefore, when BFS reaches the sink, the path found contains the
+minimum possible number of edges.
+
+This gives Edmonds--Karp a predictable polynomial running time.
+
+The algorithm does not depend on the numerical values of the
+capacities for its running time.
+
+\section{Edmonds--Karp Algorithm Steps}
+
+\begin{enumerate}[label=\textbf{Step \arabic\*:}]
+
+```
+\item Initialize the flow on every edge to zero.
+
+\item Construct the residual graph.
+
+\item Use BFS to find the shortest augmenting path from the source
+$s$ to the sink $t$.
+
+\item If no path is found, stop. The current flow is the maximum
+flow.
+
+\item Find the bottleneck capacity of the path:
+
+\[
+\Delta =
+\min_{(u,v)\in P} c_f(u,v)
+\]
+
+\item Increase the flow along the selected path by $\Delta$.
+
+\item Update the residual capacities and reverse edges.
+
+\item Repeat the BFS search until no augmenting path exists.
+
+\item Return the resulting maximum flow.
+```
+
+\end{enumerate}
+
+\section{Time Complexity of Edmonds--Karp}
+
+In Edmonds--Karp, BFS is used to find every augmenting path.
+
+The time required for one BFS is:
+
+[
+O(E)
+]
+
+A key property of Edmonds--Karp is that the number of augmentations is
+bounded by:
+
+[
+O(VE)
+]
+
+Therefore:
+
+[
+O(E)\times O(VE)
+]
+
+gives:
+
+[
+\boxed{O(VE^2)}
+]
+
+Thus, the time complexity of Edmonds--Karp is:
+
+[
+\boxed{O(VE^2)}
+]
+
+where:
+
+\begin{itemize}
+\item $V$ is the number of vertices.
+\item $E$ is the number of edges.
+\end{itemize}
+
+This is a polynomial-time complexity.
+
+\section{Correctness of the Algorithms}
+
+The correctness of both algorithms is based on the
+Max-Flow Min-Cut theorem.
+
+The theorem states that the maximum possible flow from the source to
+the sink is equal to the minimum capacity of an $s$-$t$ cut.
+
+\begin{theorem}
+If there is no augmenting path from $s$ to $t$ in the residual graph,
+then the current flow is a maximum flow.
+\end{theorem}
+
+\subsection{Reason}
+
+The algorithm continuously increases the flow as long as an
+augmenting path exists.
+
+When no augmenting path remains, the vertices reachable from the
+source in the residual graph form a cut.
+
+All edges crossing this cut from the reachable side to the
+unreachable side are fully saturated.
+
+Therefore, the capacity of this cut is equal to the value of the
+current flow.
+
+By the Max-Flow Min-Cut theorem, the current flow must be a maximum
+flow.
+
+\section{Comparison of Ford--Fulkerson and Edmonds--Karp}
+
+\begin{center}
+
+\renewcommand{\arraystretch}{1.5}
+
+\begin{tabular}{>{\raggedright\arraybackslash}p{4cm}
+\>{\raggedright\arraybackslash}p{5cm}
+\>{\raggedright\arraybackslash}p{5cm}}
+
+\toprule
+
+\textbf{Feature}
+&
+\textbf{Ford--Fulkerson}
+&
+\textbf{Edmonds--Karp}
+\\
+
+\midrule
+
+Path selection
+&
+Any augmenting path
+&
+Shortest augmenting path in terms of edges
+\\
+
+Search method
+&
+DFS or any suitable method
+&
+BFS
+\\
+
+Running time
+&
+$O(EF)$ for integer capacities
+&
+$O(VE^2)$
+\\
+
+Dependence on capacities
+&
+Depends on maximum flow value
+&
+Independent of capacity values for the asymptotic bound
+\\
+
+Polynomial time
+&
+Not guaranteed in general
+&
+Yes
+\\
+
+Implementation
+&
+Simpler
+&
+More structured because BFS is used
+\\
+
+\bottomrule
+
+\end{tabular}
+
+\end{center}
+
+\section{Important Terms}
+
+\begin{description}
+
+```
+\item[Flow:] The amount of a commodity sent through a network.
+
+\item[Capacity:] The maximum amount of flow that an edge can carry.
+
+\item[Source:] The vertex from which the flow originates.
+
+\item[Sink:] The vertex where the flow terminates.
+
+\item[Residual Capacity:] The remaining capacity available on an
+edge.
+
+\item[Residual Graph:] A graph representing the remaining possible
+flow and reverse flow.
+
+\item[Augmenting Path:] A path from the source to the sink in the
+residual graph.
+
+\item[Bottleneck Capacity:] The smallest residual capacity on an
+augmenting path.
+
+\item[Maximum Flow:] The largest possible flow from the source to
+the sink.
+```
+
+\end{description}
+
+\section{Complexity Summary}
+
+The main complexities can be summarized as follows.
+
+\begin{center}
+
+\renewcommand{\arraystretch}{1.5}
+
+\begin{tabular}{>{\raggedright\arraybackslash}p{5cm}
+\>{\raggedright\arraybackslash}p{5cm}}
+
+\toprule
+
+\textbf{Algorithm} & \textbf{Time Complexity} \\
+
+\midrule
+
+Ford--Fulkerson &
+$O(EF)$ for integer capacities
+\\
+
+Edmonds--Karp &
+$O(VE^2)$
+\\
+
+\bottomrule
+
+\end{tabular}
+
+\end{center}
+
+Here, $V$ represents the number of vertices, $E$ represents the number
+of edges, and $F$ represents the value of the maximum flow.
+
+\section{Key Points}
+
+The following points are important to remember:
+
+\begin{enumerate}
+
+```
+\item Ford--Fulkerson is a method for finding maximum flow.
+
+\item It starts with zero flow.
+
+\item It repeatedly finds an augmenting path.
+
+\item The bottleneck capacity determines how much additional flow
+can be sent.
+
+\item The residual graph contains both forward and reverse
+capacities.
+
+\item Ford--Fulkerson can choose any augmenting path.
+
+\item For integer capacities, its complexity is:
+
+\[
+O(EF)
+\]
+
+\item Edmonds--Karp is a specific implementation of
+Ford--Fulkerson.
+
+\item Edmonds--Karp uses BFS to find the shortest augmenting path.
+
+\item The time complexity of Edmonds--Karp is:
+
+\[
+O(VE^2)
+\]
+
+\item Edmonds--Karp always terminates in polynomial time.
+
+\item Both algorithms are based on repeatedly increasing the flow
+using augmenting paths.
+```
+
+\end{enumerate}
+
+\section{Conclusion}
+
+Ford--Fulkerson and Edmonds--Karp are important algorithms for solving
+the Maximum Flow problem.
+
+Ford--Fulkerson provides the basic idea of repeatedly finding
+augmenting paths in a residual graph. Its performance depends on the
+choice of paths and, for integer capacities, can be expressed as
+$O(EF)$.
+
+Edmonds--Karp improves the path-selection method by always using BFS to
+find the shortest augmenting path. This gives it a polynomial
+time complexity of:
+
+[
+O(VE^2)
+]
+
+The main difference to remember is that Ford--Fulkerson allows any
+augmenting path, whereas Edmonds--Karp specifically uses BFS.
+
+\end{document}
+
+Close
